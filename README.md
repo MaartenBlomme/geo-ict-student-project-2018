@@ -37,7 +37,7 @@ Relevant literature will be stored in the `literature` subfolder. Furthermore, f
 
 - Highly recommended read: [Good enough practices in scientific computing](https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1005510)
 - As we use Github, you will write a lot of `markdown` (readme files, issues,...). The syntax is rather intuitive and [this cheat sheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) will get you quickly up to speed! 
-- As we are working with point data, this fits in a so-called `data.frame`. Both R and Python do have packages to support the handling (reading, writing, slicing, filtering,..) of a `data.frame`. Python-eers, check the [Pandas](http://pandas.pydata.org/pandas-docs/stable/10min.html) library  and maybe [this course](https://datacarpentry.org/python-ecology-lesson/). R-people, check the [tidyverse](https://www.tidyverse.org/) packages. 
+- As we are working with observation data, this fits in a so-called `data.frame`. Both R and Python do have packages to support the handling (reading, writing, slicing, filtering,..) of a `data.frame`. Python-eers, check the [Pandas](http://pandas.pydata.org/pandas-docs/stable/10min.html) library  and maybe [this course](https://datacarpentry.org/python-ecology-lesson/). The geopgraphical component can be handled by using [Geopandas](http://geopandas.org/). R-people, check the [tidyverse](https://www.tidyverse.org/) packages. 
 
 
 ### Project folder structure
