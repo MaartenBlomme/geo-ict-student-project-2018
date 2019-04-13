@@ -19,8 +19,8 @@ for meeuw in meeuwen_list:
     # timestamp als index zetten
     dfdict[meeuw] = dfdict[meeuw].set_index('date_time')
     
-    #als frequentie instellen (gelijk aan .resamle('600S').asfreq() )
-    dfdict[meeuw] = dfdict[meeuw].asfreq('600S')
+    #als frequentie instellen (gelijk aan .resamle('60S').asfreq() )
+    dfdict[meeuw] = dfdict[meeuw].asfreq('60S')
     
     #interpoleren van kolommen (series)
     dfdict[meeuw][['longitude','latitude','direction']] = dfdict[meeuw][['longitude','latitude','direction']].interpolate(method='linear')
