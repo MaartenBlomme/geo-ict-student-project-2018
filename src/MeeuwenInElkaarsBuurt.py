@@ -2,10 +2,11 @@
 """
 Created on Mon Apr 15 11:07:17 2019
 
-@author: maarten
+@author: maart
 """
 import pandas as pd
 from geopandas import GeoDataFrame
+from pandas import Series
 from shapely.geometry import Point
 import itertools
 import numpy as np
@@ -25,8 +26,8 @@ def ReadData(bestand):
     
     return dfdict, meeuwen
 
-def SyncMeeuwen(dfdict, meeuwen, frequentie):
-
+def SyncMeeuwen(dfdict, frequentie):
+    meeuwen = list(dfdict.keys())
     for meeuw in meeuwen:
         # timestamp als index zetten
         dfdict[meeuw] = dfdict[meeuw].set_index('date_time')
@@ -57,7 +58,8 @@ def SyncMeeuwen(dfdict, meeuwen, frequentie):
 
     return dfdict
 
-def Merge(dfdict, meeuwen):
+def Merge(dfdict):
+    meeuwen = list(dfdict.keys())
     # alle data opnieuw samenbrengen
     # eerste meeuw uit dictionary halen en aanvullen met de andere meeuwen
     mergeddf = dfdict[meeuwen[0]]
@@ -68,7 +70,7 @@ def Merge(dfdict, meeuwen):
 
     return mergeddf
 
-def BepaalBuren(mergeddf, meeuwen, buffer_afstand):
+def BepaalBuren(mergeddf, meeuwen):
     import pandas as pd
 
     mergeddf_zi = mergeddf.reset_index(level=1)
@@ -100,12 +102,13 @@ def BepaalBuren(mergeddf, meeuwen, buffer_afstand):
         for tijdstip, row in buren.iterrows():
             if tijdstip >= samen_begin and tijdstip <= samen_eind:
             
-                if mergeddf.loc[meeuw1, tijdstip]['geometry'].distance(mergeddf.loc[meeuw2, tijdstip]['geometry']) <= buffer_afstand:
+                if mergeddf.loc[meeuw1, tijdstip]['geometry'].distance(mergeddf.loc[meeuw2, tijdstip]['geometry']) <= 500:
                     row[koppel] = True
 
     return buren, koppels
 
-def GetBuurSequenties(buren, koppels):
+def GetBuurSequentiesDict(buren, koppels):
+    
     sequenties = dict()
 
     for koppel in koppels:
@@ -133,10 +136,28 @@ def GetBuurSequenties(buren, koppels):
             
     return sequenties
 
+def SequentieDictToDF(sequenties_dict):
+    koppels = list(sequenties_dict.keys())
+    
+    sequenties_df = pd.DataFrame()
+    for koppel in koppels:
+        length = len(sequenties[koppel])
+        koppel_seqdf = pd.DataFrame.from_dict(sequenties[koppel])
+        koppel_seqdf.columns = ['begin','einde']
+        koppel_seqdf['koppel'] = Series([str(koppel)]*length)
+        
+        sequenties_df = sequenties_df.append(koppel_seqdf, ignore_index=True)
+    
+    sequenties_df = sequenties_df[['koppel','begin','einde']]
+    sequenties_df["duur"] = sequenties_df["einde"]-sequenties_df["begin"]
+    
+    
+    return sequenties_df
 
 dfdict, meeuwen = ReadData(r'C:\Users\maart\OneDrive\Master\Projectwerk Geo-ICT\test\DrieMeeuwen.csv')
 freq = '60S'
-dfdict = SyncMeeuwen(dfdict, meeuwen, freq)
-mergeddf = Merge(dfdict, meeuwen)
-buren, koppels = BepaalBuren(mergeddf, meeuwen, buffer_afstand)
-sequenties = GetBuurSequenties(buren, koppels)
+dfdict = SyncMeeuwen(dfdict, freq)
+mergeddf = Merge(dfdict)
+buren, koppels = BepaalBuren(mergeddf, meeuwen)
+sequenties = GetBuurSequentiesDict(buren, koppels)
+sequenties_df = SequentieDictToDF(sequenties)
