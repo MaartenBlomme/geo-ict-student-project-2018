@@ -12,6 +12,7 @@ import itertools
 import numpy as np
 import math
 import matplotlib.pyplot as plt
+import time
 
 def ReadData(bestand):
     
@@ -70,45 +71,42 @@ def Merge(dfdict):
 
     return mergeddf
 
-def BepaalBuren(mergeddf, meeuwen):
-    import pandas as pd
+def BerekenAfstanden(mergeddf, meeuwen):
+    
+    punten = mergeddf.loc[meeuwen[0]][['geometry']]
+    kolomnaam = 'geometry_'+meeuwen[0]
+    punten.columns = [kolomnaam]
 
-    mergeddf_zi = mergeddf.reset_index(level=1)
-    
-    mTI = pd.DataFrame(index=meeuwen, columns=['eerste','laatste'])
-    
-    for meeuw in meeuwen:
-        mTI.at[meeuw, 'eerste'] = mergeddf_zi.loc[meeuw].date_time.min()
-        mTI.at[meeuw, 'laatste'] = mergeddf_zi.loc[meeuw].date_time.max()
-        
-    total_TI = [mTI['eerste'].min(), mTI['laatste'].max()]
+    for meeuw in meeuwen[1:]:
+        rsuf = '_'+meeuw
+        punten = punten.join(merged.loc[meeuw][['geometry']], how='outer', rsuffix= rsuf)
+
+    punten.columns = meeuwen #naam veranderen van kolommen
     
     koppels = list(itertools.combinations(meeuwen,2))
     
-    koppelsTI = dict()
-    buren = pd.DataFrame(index= total_TI, columns=koppels)
-    buren.fillna(False, inplace=True)
-    buren = buren.resample('60S').pad()
-    buren.index.name = 'date_time'
+    afstanden = pd.DataFrame(index=punten.index, columns= koppels)
     
+
+    for tijdstip, row in afstanden.iterrows():
+        for koppel in koppels:
+            if pd.notna(punten.loc[tijdstip, koppel[0]]) and pd.notna(punten.loc[tijdstip,koppel[1]]):
+                row[koppel] = punten.loc[tijdstip, koppel[0]].distance(punten.loc[tijdstip,koppel[1]]) 
+          
+    return afstanden
+    
+def BepaalBuren(afstanden, meeuwen, buffer):
+    buren = pd.DataFrame(index=afstanden.index, columns= afstanden.columns)
+    koppels =  list(itertools.combinations(meeuwen,2))
+
     for koppel in koppels:
-        meeuw1 = koppel[0]
-        meeuw2 = koppel[1]
-    
-        samen_begin = max(mTI.loc[meeuw1]['eerste' ], mTI.loc[meeuw2]['eerste' ])
-        samen_eind  = min(mTI.loc[meeuw1]['laatste'], mTI.loc[meeuw2]['laatste'])
-        koppelsTI.update({koppel:(samen_begin,samen_eind)})
-    
-        for tijdstip, row in buren.iterrows():
-            if tijdstip >= samen_begin and tijdstip <= samen_eind:
-            
-                if mergeddf.loc[meeuw1, tijdstip]['geometry'].distance(mergeddf.loc[meeuw2, tijdstip]['geometry']) <= 500:
-                    row[koppel] = True
+        buren[koppel] = afstanden[koppel].apply(lambda x: True if x <= buffer else False)
+        
+    return buren
 
-    return buren, koppels
+def GetBuurSequentiesDict(buren, meeuwen):
+    koppels =  list(itertools.combinations(meeuwen,2))
 
-def GetBuurSequentiesDict(buren, koppels):
-    
     sequenties = dict()
 
     for koppel in koppels:
@@ -128,7 +126,6 @@ def GetBuurSequentiesDict(buren, koppels):
                     einde_sequentie = tijdstip
                 
             elif opzoek == False:
-              
                 sequenties[koppel].append((start_sequentie, einde_sequentie))
                 start_sequentie = np.nan
                 einde_sequentie = np.nan 
@@ -156,8 +153,10 @@ def SequentieDictToDF(sequenties_dict):
 
 dfdict, meeuwen = ReadData(r'C:\Users\maart\OneDrive\Master\Projectwerk Geo-ICT\test\DrieMeeuwen.csv')
 freq = '60S'
+buffer = 500
 dfdict = SyncMeeuwen(dfdict, freq)
 mergeddf = Merge(dfdict)
-buren, koppels = BepaalBuren(mergeddf, meeuwen)
-sequenties = GetBuurSequentiesDict(buren, koppels)
+afstandendf = BerekenAfstanden(mergeddf, meeuwen)
+buren = BepaalBuren(afstandendf, meeuwen, buffer)
+sequenties = GetBuurSequentiesDict(buren, meeuwen)
 sequenties_df = SequentieDictToDF(sequenties)
