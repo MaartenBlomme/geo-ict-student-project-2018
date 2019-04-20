@@ -89,7 +89,7 @@ def Heatmap(mergeddf):
     pivot_table = phase_1_2.pivot('bird_name', 'date_time', 'direction')
     plt.xlabel('date_time', size = 15)
     plt.ylabel('bird_name', size = 15)
-    plt.title('Fligt direction', size = 15)
+    plt.title('Flight direction', size = 15)
     sns.heatmap(pivot_table, annot=False, fmt=".1f", linewidths=.5, square = True, cmap = 'twilight')
     return pivot_table
 #testen van de functies
