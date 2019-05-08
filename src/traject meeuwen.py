@@ -26,7 +26,7 @@ def lijn(dfdict):
     
     meeuwen = list(dfdict.keys())
     for meeuw in meeuwen:
-        dfdict[meeuw] = dfdict[meeuw].set_index(pd.DatetimeIndex('date_time'), inplace = True)
+        dfdict[meeuw] = dfdict[meeuw].set_index(pd.DatetimeIndex(dfdict[meeuw].date_time))
     
         geometry = [Point(xy) for xy in zip(dfdict[meeuw].longitude, dfdict[meeuw].latitude)]
         geo_df = gpd.GeoDataFrame(dfdict[meeuw], geometry=geometry)
