@@ -32,6 +32,9 @@ def lijn(dfdict):
         geo_df = gpd.GeoDataFrame(dfdict[meeuw], geometry=geometry)
     
         crs = {'init': 'epsg:4326'}
+        # filter is noodzakelijk om groepen met slecht 1 punt te verwijderen (daar kunnen geen lijnen van gemaakt worden)
+        geo_df = geo_df.groupby([geo_df.index.year, geo_df.index.month, geo_df.index.day]).filter(lambda x: len(x)>1)
+        
         geo_df = geo_df.groupby([geo_df.index.year, geo_df.index.month, geo_df.index.day])['geometry'].apply(lambda x: LineString(x.tolist()))
         geo_df = GeoDataFrame(geo_df, crs = crs, geometry='geometry')
         geo_df = geo_df.to_crs({'init': 'epsg:31370'})
