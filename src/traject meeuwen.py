@@ -32,17 +32,18 @@ def lijn(dfdict):
         geo_df = gpd.GeoDataFrame(dfdict[meeuw], geometry=geometry)
     
         crs = {'init': 'epsg:4326'}
-        # filter is noodzakelijk om groepen met slecht 1 punt te verwijderen (daar kunnen geen lijnen van gemaakt worden)
-        geo_df = geo_df.groupby([geo_df.index.year, geo_df.index.month, geo_df.index.day]).filter(lambda x: len(x)>1)
-        
         geo_df = geo_df.groupby([geo_df.index.year, geo_df.index.month, geo_df.index.day])['geometry'].apply(lambda x: LineString(x.tolist()))
+        geo_df.index.rename(['jaar', 'maand', 'dag'], inplace = True)
+        
+       
         geo_df = GeoDataFrame(geo_df, crs = crs, geometry='geometry')
+        geo_df.reset_index(inplace = True)
         geo_df = geo_df.to_crs({'init': 'epsg:31370'})
         
-        geo_df.to_file('trajecten_{}'.format(meeuw), 'GPX')
-    
+        geo_df.to_file('trajecten_{}'.format(meeuw), driver = 'ESRI Shapefile')
+        print(geo_df)
     return geo_df
 
-dfdict, meeuwen = ReadData(r'C:\Users\User\Documents\2e master geografie\projectwerk geo-ict\data.geo.ict.csv')
+dfdict, meeuwen = ReadData(r'C:\Users\User\Documents\2e master geografie\projectwerk geo-ict\DrieMeeuwen.csv')
 
 shplijn = lijn(dfdict)
