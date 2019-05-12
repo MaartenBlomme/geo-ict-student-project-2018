@@ -139,12 +139,14 @@ def SequentieDictToDF(sequenties_dict):
     sequenties_df = pd.DataFrame()
     for koppel in koppels:
         length = len(sequenties[koppel])
-        koppel_seqdf = pd.DataFrame.from_dict(sequenties[koppel])
-        koppel_seqdf.columns = ['begin','einde']
-        koppel_seqdf['koppel'] = Series([str(koppel)]*length)
-        
-        sequenties_df = sequenties_df.append(koppel_seqdf, ignore_index=True)
-    
+       
+        if sequenties_dict[koppel]:
+            koppel_seqdf = pd.DataFrame.from_dict(sequenties[koppel])
+            koppel_seqdf.columns = ['begin','einde']
+            koppel_seqdf['koppel'] = Series([str(koppel)]*length)
+
+            sequenties_df = sequenties_df.append(koppel_seqdf, ignore_index=True)
+
     sequenties_df = sequenties_df[['koppel','begin','einde']]
     sequenties_df["duur"] = sequenties_df["einde"]-sequenties_df["begin"]
     
