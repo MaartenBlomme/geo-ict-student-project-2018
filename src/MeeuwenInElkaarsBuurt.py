@@ -290,3 +290,33 @@ def ExportDataFrameCSV(dataframe):
 
 #sequentiesdfLoc = Locaties.BeginEind(sequentiesdf)
 #sequentiesgdf = GeoDataFrame(sequentiesdfLoc, geometry=sequentiesdfLoc['geometry'], crs=31370)
+
+def GetTrajectory(gull, t1, t2):
+    trackingpoints = mergeddf.loc[(gull, t1):(gull,t2)]
+    group = trackingpoints.groupby(level=0) #group by gull, even though there is only one gull, makes creating a line possible
+    lijn = group['geometry'].apply(lambda x: LineString(x.tolist()))
+    
+    return lijn
+
+def GetSequenceTrajectories():
+    trajectories = pd.DataFrame(columns = ['gull pair', 'start', 'end','gull','geometry'])
+    
+    koppels = sequenties.keys()
+    for koppel in koppels:
+        for sequentie in sequenties[koppel]:
+            t1 = sequentie[0]
+            t2 = sequentie[1]
+            for gull in koppel:
+                print( koppel, t1, t2, gull, GetTrajectory(gull,t1,t2))
+                trajectories = trajectories.append({
+                'gull pair': str(koppel),
+                'start': str(t1),
+                'end': str(t2),
+                'gull': gull,
+                'geometry': GetTrajectory(gull,t1,t2).iloc[0]
+                }, ignore_index=True)
+     
+    trajectories = GeoDataFrame(trajectories, crs={'init':'epsg:31370'},geometry='geometry')   
+    trajectories.to_file(r'C:\Users\maart\OneDrive\Master\Projectwerk Geo-ICT\Trajecten\trajecten_{}'.format('buren_sequenties'), 'ESRI Shapefile')    
+    
+    return trajectories
