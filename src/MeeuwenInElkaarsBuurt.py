@@ -320,3 +320,30 @@ def GetSequenceTrajectories():
     trajectories.to_file(r'C:\Users\maart\OneDrive\Master\Projectwerk Geo-ICT\Trajecten\trajecten_{}'.format('buren_sequenties'), 'ESRI Shapefile')    
     
     return trajectories
+
+def GetAttributes(gull, t1,t2):
+    attributes = mergeddf.loc[(gull,t1):(gull,t2)]
+    return attributes
+
+
+def GetSequenceAttributes():
+    
+    dataframe = pd.DataFrame()
+    gull_pairs = sequenties.keys()
+    
+    for gull_pair in gull_pairs:
+        for sequence in sequenties[gull_pair]:
+            t1 = sequence[0]
+            t2 = sequence[1]
+            for gull in gull_pair:
+                df = GetAttributes(gull,t1,t2)
+                df.reset_index(inplace=True)
+                df.loc[:]['gull_pair'] = str(gull_pair)
+                df.loc[:]['start'] = t1
+                df.loc[:]['end'] = t1
+                
+                dataframe = dataframe.append(df, ignore_index=True)
+                
+    
+    dataframe.set_index(['gull_pair','bird_name','start','end','date_time'],inplace=True)
+    return dataframe
