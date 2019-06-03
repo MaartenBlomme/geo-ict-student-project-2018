@@ -30,6 +30,13 @@ def SyncMeeuwen(dictionary, syncfreq, limiet):
     meeuwen = list(dfdict.keys())
     
     for meeuw in meeuwen:
+        # voor iedere meeuw een eerste rij invoeren met afgeronde timestamp
+        # voorkomt problemen met synchronisatie, wanneer er seconden in de timestamp zitten
+        rond_tijdstip = dfdict[meeuw].iloc[0].date_time.floor(frequentie)
+        line = pd.DataFrame({'date_time':rond_tijdstip}, index=[-1])
+        dfdict[meeuw] = pd.concat([line, dfdict[meeuw].loc[:]], sort = True)
+        
+      
         # timestamp als index zetten
         dfdict[meeuw] = dfdict[meeuw].set_index('date_time')
         
